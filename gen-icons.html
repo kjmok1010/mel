@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Icon Generator</title></head>
+<body>
+<script>
+/* EduBlog PWA 아이콘 자동 생성기 */
+const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+
+function drawIcon(size) {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const r = size * 0.18; // 모서리 반경
+
+  /* 배경 — safe zone (maskable: 80% 안쪽) */
+  const pad = size * 0.1;
+
+  // 배경 그라디언트
+  const grad = ctx.createLinearGradient(0, 0, size, size);
+  grad.addColorStop(0, '#3730a3');
+  grad.addColorStop(0.5, '#4f46e5');
+  grad.addColorStop(1, '#06b6d4');
+  roundRect(ctx, 0, 0, size, size, r, grad);
+
+  // 흰색 카드 영역
+  const cx = size / 2, cy = size / 2;
+  const cardW = size * 0.56, cardH = size * 0.62;
+  const cardX = cx - cardW / 2, cardY = cy - cardH / 2 - size * 0.03;
+  roundRect(ctx, cardX, cardY, cardW, cardH, size * 0.06, 'rgba(255,255,255,0.95)');
+
+  // 줄 (텍스트 라인 모사)
+  const lineColor = '#4f46e5';
+  const lineW = cardW * 0.68;
+  const lineH = size * 0.045;
+  const lineX = cx - lineW / 2;
+  const gap   = size * 0.078;
+  [0, 1, 2].forEach((i, idx) => {
+    ctx.fillStyle = idx === 0 ? lineColor : '#94a3b8';
+    const w = idx === 0 ? lineW : lineW * (idx === 1 ? 0.75 : 0.55);
+    roundRect(ctx, lineX, cardY + cardH * 0.2 + i * gap, w, lineH, lineH / 2, ctx.fillStyle);
+  });
+
+  // 📚 이모지 (하단 오른쪽)
+  ctx.font = `${size * 0.22}px serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('📚', cx + cardW * 0.22, cardY + cardH * 0.7);
+
+  return canvas.toDataURL('image/png');
+}
+
+function roundRect(ctx, x, y, w, h, r, fill) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+  ctx.fillStyle = fill;
+  ctx.fill();
+}
+
+/* 모든 크기 생성 후 링크 출력 */
+const out = document.createElement('div');
+out.style = 'display:flex;flex-wrap:wrap;gap:12px;padding:20px;font-family:sans-serif;';
+sizes.forEach(s => {
+  const dataUrl = drawIcon(s);
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = `icon-${s}.png`;
+  const img = document.createElement('img');
+  img.src = dataUrl;
+  img.style = `width:${Math.min(s,96)}px;height:${Math.min(s,96)}px;border:1px solid #ccc;border-radius:8px;`;
+  a.appendChild(img);
+  const lbl = document.createElement('div');
+  lbl.textContent = `${s}×${s}`;
+  lbl.style = 'font-size:11px;text-align:center;margin-top:4px;color:#555;';
+  const wrap = document.createElement('div');
+  wrap.style = 'text-align:center;';
+  wrap.appendChild(a);
+  wrap.appendChild(lbl);
+  out.appendChild(wrap);
+  /* 자동 저장을 위해 data URL을 콘솔에도 출력 */
+  window.__icons = window.__icons || {};
+  window.__icons[s] = dataUrl;
+});
+
+const btn = document.createElement('button');
+btn.textContent = '⬇️ 전체 다운로드';
+btn.style = 'margin:20px;padding:12px 24px;font-size:1rem;background:#4f46e5;color:#fff;border:none;border-radius:8px;cursor:pointer;';
+btn.onclick = () => sizes.forEach(s => {
+  const a = document.createElement('a');
+  a.href = window.__icons[s];
+  a.download = `icon-${s}.png`;
+  a.click();
+});
+
+document.body.appendChild(out);
+document.body.appendChild(btn);
+document.body.style = 'background:#f8fafc;';
+</script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="UTF-8"><title>EduBlog Icon Generator</title>
+<style>body{font-family:sans-serif;padding:20px;background:#f8fafc;}
+h2{color:#4f46e5;} .grid{display:flex;flex-wrap:wrap;gap:16px;margin:20px 0;}
+.item{text-align:center;} canvas{border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.15);}
+.dl{display:block;margin-top:6px;font-size:12px;color:#4f46e5;cursor:pointer;}
+.btn{padding:12px 24px;background:#4f46e5;color:#fff;border:none;border-radius:8px;
+font-size:1rem;cursor:pointer;margin:8px 4px;}
+.status{margin:16px 0;padding:12px;background:#f0fdf4;border:1px solid #86efac;
+border-radius:8px;color:#166534;display:none;}
+</style>
+</head>
+<body>
+<h2>📚 EduBlog PWA 아이콘 생성기</h2>
+<p>아래 버튼을 클릭하면 모든 아이콘이 자동으로 생성되고 다운로드됩니다.</p>
+<button class="btn" onclick="generateAll()">⬇️ 모든 아이콘 생성 및 다운로드</button>
+<div class="status" id="status">✅ 모든 아이콘이 생성되었습니다! 다운로드된 파일을 <code>icons/</code> 폴더에 넣어주세요.</div>
+<div class="grid" id="grid"></div>
+
+<script>
+const SIZES = [72, 96, 128, 144, 152, 192, 384, 512];
+
+function drawIcon(size) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const s = size;
+
+  function rr(x,y,w,h,r,fill) {
+    ctx.beginPath();
+    ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y);
+    ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r);
+    ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h);
+    ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r);
+    ctx.quadraticCurveTo(x,y,x+r,y);
+    ctx.closePath();
+    if(typeof fill==='string') ctx.fillStyle=fill;
+    else ctx.fillStyle=fill;
+    ctx.fill();
+  }
+
+  // 배경 그라디언트
+  const g = ctx.createLinearGradient(0,0,s,s);
+  g.addColorStop(0,'#3730a3');
+  g.addColorStop(0.5,'#4f46e5');
+  g.addColorStop(1,'#06b6d4');
+  rr(0,0,s,s,s*0.18,g);
+
+  // 광택 효과
+  const shine = ctx.createLinearGradient(0,0,0,s*0.5);
+  shine.addColorStop(0,'rgba(255,255,255,0.12)');
+  shine.addColorStop(1,'rgba(255,255,255,0)');
+  rr(0,0,s,s*0.5,0,shine);
+
+  // 카드
+  const cx=s/2, cy=s/2;
+  const cw=s*0.56, ch=s*0.60;
+  const cx0=cx-cw/2, cy0=cy-ch/2-s*0.02;
+  rr(cx0,cy0,cw,ch,s*0.065,'rgba(255,255,255,0.96)');
+
+  // 카드 상단 컬러 바
+  rr(cx0,cy0,cw,s*0.08,s*0.065,'#4f46e5');
+  rr(cx0,cy0+s*0.04,cw,s*0.04,0,'#4f46e5');
+
+  // 텍스트 줄들
+  const lx=cx0+cw*0.13, lw=cw*0.74;
+  const row1=cy0+ch*0.24, row2=cy0+ch*0.40, row3=cy0+ch*0.52;
+
+  // 줄 1 (굵게, 인디고)
+  rr(lx, row1, lw, s*0.048, s*0.024, '#4338ca');
+  // 줄 2 (보통)
+  rr(lx, row2, lw*0.75, s*0.036, s*0.018, '#a5b4fc');
+  // 줄 3 (짧게)
+  rr(lx, row3, lw*0.52, s*0.036, s*0.018, '#c7d2fe');
+
+  // 책 이모지
+  ctx.font = `${s*0.22}px "Segoe UI Emoji", "Apple Color Emoji", serif`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('📚', cx+cw*0.18, cy0+ch*0.76);
+
+  return c;
+}
+
+function generateAll() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  SIZES.forEach((size, i) => {
+    setTimeout(() => {
+      const canvas = drawIcon(size);
+      const url = canvas.toDataURL('image/png');
+
+      // 미리보기
+      const previewSize = Math.min(size, 96);
+      const previewCanvas = document.createElement('canvas');
+      previewCanvas.width = previewCanvas.height = previewSize;
+      const pctx = previewCanvas.getContext('2d');
+      pctx.drawImage(canvas, 0, 0, previewSize, previewSize);
+
+      const item = document.createElement('div');
+      item.className = 'item';
+      item.innerHTML = `<a href="${url}" download="icon-${size}.png">
+        <canvas width="${previewSize}" height="${previewSize}" style="border-radius:${previewSize*0.18}px;box-shadow:0 2px 8px rgba(0,0,0,.15);"></canvas>
+      </a>
+      <span class="dl" onclick="dl('${url}','icon-${size}.png')">${size}×${size} ⬇️</span>`;
+      item.querySelector('canvas').getContext('2d').drawImage(canvas, 0, 0, previewSize, previewSize);
+      grid.appendChild(item);
+
+      // 자동 다운로드
+      setTimeout(() => {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `icon-${size}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }, i * 200);
+
+      if (i === SIZES.length - 1) {
+        document.getElementById('status').style.display = 'block';
+      }
+    }, i * 50);
+  });
+
+  // 스크린샷 placeholder
+  setTimeout(() => {
+    const sc = document.createElement('canvas');
+    sc.width = 390; sc.height = 844;
+    const sctx = sc.getContext('2d');
+    const g2 = sctx.createLinearGradient(0,0,390,844);
+    g2.addColorStop(0,'#1e1b4b'); g2.addColorStop(1,'#4f46e5');
+    sctx.fillStyle = g2; sctx.fillRect(0,0,390,844);
+    sctx.fillStyle='rgba(255,255,255,0.9)';
+    sctx.font='bold 28px sans-serif'; sctx.textAlign='center';
+    sctx.fillText('📚 EduBlog', 195, 422);
+    const scUrl = sc.toDataURL('image/png');
+    const a2 = document.createElement('a');
+    a2.href = scUrl; a2.download = 'screenshot-mobile.png';
+    document.body.appendChild(a2); a2.click(); document.body.removeChild(a2);
+  }, SIZES.length * 200 + 500);
+}
+
+function dl(url, name) {
+  const a = document.createElement('a');
+  a.href=url; a.download=name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+</script>
+</body>
+</html>
